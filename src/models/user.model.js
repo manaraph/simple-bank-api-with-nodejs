@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 
 const Schema = mongoose.Schema;
 
-// Create the User Schema
 const UserSchema = new Schema({
   username: {
     type: String,
@@ -21,6 +20,11 @@ const UserSchema = new Schema({
     enum: ['USER', 'ADMIN'],
     default: 'USER',
     trim: true,
+  },
+  password: {
+    type: String,
+    select: false,
+    required: true,
   },
   createdAt: {
     type: Date,
