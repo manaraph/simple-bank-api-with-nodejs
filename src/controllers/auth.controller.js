@@ -1,13 +1,13 @@
 const httpStatus = require('http-status');
 const APIResponse = require('../utils/response');
-const APIResponse = require('../utils/response');
 const { validateEmail, generatePassword } = require('../utils/utils');
+const { hashPassword } = require('../services/bcrypt.service');
 const User = require('../models/user.model');
 
-const createUser = async (req, res) => {
+const register = async (req, res) => {
   try {
-    const { body } = req;
-    const isEmailValid = validateEmail(body.email);
+    const { username, email, role } = req.body;
+    const isEmailValid = validateEmail(email);
 
     if (!isEmailValid) {
       const data = {
@@ -16,30 +16,33 @@ const createUser = async (req, res) => {
       return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
     }
 
-    const userExists = await User.findOne({ email: body.emal });
+    const userExists = await User.findOne({ email });
     if (userExists) {
       const data = {
-        message: err ? 'An error occurred' : 'This email already exists',
+        message: 'This email already exists',
       };
       return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
     }
 
     const password = generatePassword();
-    body.role = body.role.toUpperCase();
-    body.password = bcrypt.hashSync(password, 10);
+    const userData = {
+      username,
+      email,
+      role: role.toUpperCase(), // You can remove this so all new users are assigned the USER role
+      password: await hashPassword(password),
+    };
 
-    const user = new User(body);
-
+    const user = new User(userData);
     const newUser = await user.save();
+    const userDetails = newUser.toObject();
+    delete userDetails.password;
 
-    // You can delete the password from the response and send it via sms or email
-    // delete newUser.password;
-
-    return APISuccess(
+    return APIResponse(
       res,
       {
         message: 'User created successfully',
-        response: newUser,
+        data: userDetails,
+        password, // Returns the generated password just for tests since sms/email is not used here
       },
       httpStatus.CREATED
     );
@@ -52,4 +55,4 @@ const createUser = async (req, res) => {
   }
 };
 
-export { createUser };
+module.exports = { register };

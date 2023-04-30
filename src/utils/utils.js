@@ -12,4 +12,4 @@ const generatePassword = (passwordLength = 10) =>
     .map((x) => x[Math.floor(Math.random() * x.length)])
     .join('');
 
-export { validateEmail, generatePassword };
+module.exports = { validateEmail, generatePassword };

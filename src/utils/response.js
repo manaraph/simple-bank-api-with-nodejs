@@ -10,4 +10,4 @@ const APIResponse = (res, data, code = 200) => {
   return res.end(JSON.stringify(response));
 };
 
-export default APIResponse;
+module.exports = APIResponse;

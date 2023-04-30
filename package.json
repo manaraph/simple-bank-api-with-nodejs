@@ -2,10 +2,10 @@
   "name": "api-with-cache-storage",
   "version": "1.0.0",
   "description": "A simple node api with cache storage",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node ./src/index.js",
-    "dev": "nodemon ./src/index.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/manaraph/node-api-with-cache-storage#readme",
   "dependencies": {
+    "bcrypt-nodejs": "^0.0.3",
     "body-parser": "^1.20.2",
     "express": "^4.18.2",
     "http-status": "^1.6.2",
