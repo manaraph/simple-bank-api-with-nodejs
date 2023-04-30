@@ -1,7 +1,8 @@
 const httpStatus = require('http-status');
-const APIResponse = require('../utils/response');
+const { APIResponse, APIFatalResponse } = require('../utils/response');
 const { validateEmail, generatePassword } = require('../utils/utils');
-const { hashPassword } = require('../services/bcrypt.service');
+const { hashPassword, comparePassword } = require('../services/bcrypt.service');
+const { issueToken } = require('../services/auth.service');
 const User = require('../models/user.model');
 
 const register = async (req, res) => {
@@ -47,12 +48,50 @@ const register = async (req, res) => {
       httpStatus.CREATED
     );
   } catch (error) {
-    const data = {
-      message: 'An error occurred',
-      error,
-    };
-    return APIResponse(res, data, httpStatus.INTERNAL_SERVER_ERROR);
+    return APIFatalResponse(res, error);
   }
 };
 
-module.exports = { register };
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (email && password) {
+      const user = await User.findOne({ email }).select('+password');
+      if (!user) {
+        const data = {
+          message: 'User not found',
+        };
+        return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
+      }
+      if (comparePassword(password, user.password)) {
+        const token = await issueToken({ user });
+
+        return APIResponse(
+          res,
+          {
+            message: 'login successful',
+            data: {
+              token,
+              user,
+            },
+          },
+          httpStatus.OK
+        );
+      } else {
+        const data = {
+          message: 'Incorrect password',
+        };
+        return APIResponse(res, data, httpStatus.BAD_REQUEST);
+      }
+    } else {
+      const data = {
+        message: 'Email and password is required',
+      };
+      return APIResponse(res, data, httpStatus.BAD_REQUEST);
+    }
+  } catch (error) {
+    return APIFatalResponse(res, error);
+  }
+};
+
+module.exports = { register, login };
