@@ -7,11 +7,11 @@ const { authRoutes, adminRoutes, userRoutes, transactionRoutes } = require('./sr
 const { authorizeAdmin, authenticateUser } = require('./src/services/auth.service');
 
 const PORT = process.env.PORT || 3000;
+const MONGO_URL = process.env.MONGO_URL;
 const app = express();
 app.use(bodyParser.json());
 
-mongoose.connect('mongodb://localhost:27017/bank_app', {
-  // useCreateIndex: true,
+mongoose.connect(MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
