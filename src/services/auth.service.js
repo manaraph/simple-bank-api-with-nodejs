@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const httpStatus = require('http-status');
 const { APIResponse } = require('../utils/response');
+const redisService = require('./redis.service');
 
 const secret = process.env.JWT_SECRET || 'secret';
 const accessTime = process.env.JWT_ACCESS_TIME || 300;
@@ -38,6 +39,7 @@ const authenticateUser = (req, res, next) => {
   const data = getAuthenticatedUser(auth);
 
   if (data?.user) {
+    req.user = data.user;
     next();
   } else {
     const data = {
@@ -68,9 +70,33 @@ const authorizeAdmin = (req, res, next) => {
   }
 };
 
+const validateRefreshToken = (req, res, next) => {
+  const { refreshToken } = req.body;
+  const bearerToken = `Bearer ${refreshToken}`;
+  const data = getAuthenticatedUser(bearerToken);
+
+  if (data?.user) {
+    const tokenExists = redisService.get(refreshToken);
+    if (tokenExists) {
+      const data = {
+        message: 'Refresh token was already used',
+      };
+      return APIResponse(res, data, httpStatus.FORBIDDEN);
+    }
+    req.user = data.user;
+    next();
+  } else {
+    const data = {
+      message: 'Invalid token',
+    };
+    return APIResponse(res, data, httpStatus.FORBIDDEN);
+  }
+};
+
 module.exports = {
   generateToken,
   getAuthenticatedUser,
   authenticateUser,
   authorizeAdmin,
+  validateRefreshToken,
 };

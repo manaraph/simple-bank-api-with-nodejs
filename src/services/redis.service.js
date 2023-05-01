@@ -2,9 +2,9 @@ const { createClient } = require('redis');
 
 const client = createClient();
 
-set = async ({ key, value, timeType, time }) => {
+set = async ({ key, time }) => {
   await client.connect();
-  await client.set(key, value, timeType, time);
+  await client.set(key, time);
   await client.disconnect();
 };
 

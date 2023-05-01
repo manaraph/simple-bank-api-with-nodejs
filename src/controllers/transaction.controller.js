@@ -7,9 +7,10 @@ const Transaction = require('../models/transaction.model');
 
 const initiatePayment = async (req, res) => {
   try {
-    const { receiverId, amount } = req.body;
-    const auth = req.headers.authorization;
-    const { user } = getAuthenticatedUser(auth);
+    const {
+      body: { receiverId, amount },
+      user,
+    } = req;
     // Wallet.updateOne(
     //   { userId: user._id },
     //   {

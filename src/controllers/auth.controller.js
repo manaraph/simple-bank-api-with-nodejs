@@ -67,17 +67,17 @@ const login = async (req, res) => {
         return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
       }
       if (comparePassword(password, user.password)) {
-        const { accessToken, refreshToken } = await generateToken({ user });
-        const userDetails = user.toObject();
-        delete userDetails.password;
-        userDetails.accessToken = accessToken;
-        userDetails.refreshToken = refreshToken;
+        const userObject = user.toObject();
+        delete userObject.password;
+        const { accessToken, refreshToken } = await generateToken({ user: userObject });
+        userObject.accessToken = accessToken;
+        userObject.refreshToken = refreshToken;
 
         return APIResponse(
           res,
           {
             message: 'login successful',
-            data: userDetails,
+            data: userObject,
           },
           httpStatus.OK
         );
@@ -104,10 +104,9 @@ const refreshAccessToken = async (req, res) => {
       body: { refreshToken },
       user,
     } = req;
+
     await redisService.set({
       key: refreshToken,
-      value: '1',
-      timeType: 'EX',
       time: parseInt(refreshTime, 10),
     });
 

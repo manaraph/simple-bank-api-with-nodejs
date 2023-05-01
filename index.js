@@ -20,9 +20,9 @@ mongoose.connection
   .on('error', (err) => console.log('connection to database failed!!', err));
 
 app.use('/api/v1/', authRoutes);
-app.use('/api/v1/', authorizeAdmin, adminRoutes);
 app.use('/api/v1/', authenticateUser, userRoutes);
 app.use('/api/v1/', authenticateUser, userRoutes);
 app.use('/api/v1/', authenticateUser, transactionRoutes);
+app.use('/api/v1/', authorizeAdmin, adminRoutes);
 
 app.listen(PORT, () => console.log(`Server running at port ${PORT}`));
