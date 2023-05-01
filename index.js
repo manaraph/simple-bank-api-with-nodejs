@@ -2,7 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 // const redis = require('redis');
-const { authRoutes, userRoutes } = require('./src/routes/v1');
+const { authRoutes, adminRoutes, userRoutes, transactionRoutes } = require('./src/routes/v1');
+const { authorizeAdmin, authenticateUser } = require('./src/services/auth.service');
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -18,6 +19,9 @@ mongoose.connection
   .on('error', (err) => console.log('connection to database failed!!', err));
 
 app.use('/api/v1/', authRoutes);
-app.use('/api/v1/', userRoutes);
+app.use('/api/v1/', authorizeAdmin, adminRoutes);
+app.use('/api/v1/', authenticateUser, userRoutes);
+app.use('/api/v1/', authenticateUser, userRoutes);
+app.use('/api/v1/', authenticateUser, transactionRoutes);
 
 app.listen(PORT, () => console.log(`Server running at port ${PORT}`));

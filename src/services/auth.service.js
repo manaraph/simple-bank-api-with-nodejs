@@ -8,10 +8,12 @@ const issueToken = (payload) => jwt.sign(payload, secret);
 
 const getAuthenticatedUser = (auth) => {
   let user;
-  if (typeof auth !== 'undefined') {
-    const bearer = auth.split(' ');
+  const bearer = auth && auth.split(' ');
+
+  if (typeof bearer !== 'undefined' && bearer.length === 2) {
     const token = bearer[1];
-    user = jwt.verify(token, (err, data) => {
+
+    user = jwt.verify(token, secret, (err, data) => {
       if (err) {
         return {
           status: 'error',
@@ -26,9 +28,11 @@ const getAuthenticatedUser = (auth) => {
 
 const authenticateUser = (req, res, next) => {
   const auth = req.headers['authorization'];
-  const bearer = auth.split(' ');
-  const token = bearer[1];
-  if (typeof token !== 'undefined') {
+  const bearer = auth && auth.split(' ');
+
+  if (typeof bearer !== 'undefined' && bearer.length === 2) {
+    const token = bearer[1];
+
     jwt.verify(token, secret, (err) => {
       if (err) {
         const data = {
@@ -50,10 +54,10 @@ const authenticateUser = (req, res, next) => {
 
 const authorizeAdmin = (req, res, next) => {
   const auth = req.headers['authorization'];
-  const bearer = auth.split(' ');
-  const token = bearer[1];
+  const bearer = auth && auth.split(' ');
 
-  if (typeof token !== 'undefined') {
+  if (typeof bearer !== 'undefined' && bearer.length === 2) {
+    const token = bearer[1];
     jwt.verify(token, secret, (err, data) => {
       if (err) {
         const data = {
