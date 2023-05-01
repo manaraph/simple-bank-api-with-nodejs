@@ -6,10 +6,30 @@ const secret = process.env.JWT_SECRET || 'secret';
 
 const issueToken = (payload) => jwt.sign(payload, secret);
 
+const getAuthenticatedUser = (auth) => {
+  let user;
+  if (typeof auth !== 'undefined') {
+    const bearer = auth.split(' ');
+    const token = bearer[1];
+    user = jwt.verify(token, (err, data) => {
+      if (err) {
+        return {
+          status: 'error',
+          err,
+        };
+      }
+      return data;
+    });
+  }
+  return user;
+};
+
 const authenticateUser = (req, res, next) => {
-  const bearerToken = req.headers['authorization'];
-  if (typeof bearerToken !== 'undefined') {
-    jwt.verify(bearerToken, secret, (err) => {
+  const auth = req.headers['authorization'];
+  const bearer = auth.split(' ');
+  const token = bearer[1];
+  if (typeof token !== 'undefined') {
+    jwt.verify(token, secret, (err) => {
       if (err) {
         const data = {
           message: 'Access denied',
@@ -22,16 +42,19 @@ const authenticateUser = (req, res, next) => {
     });
   } else {
     const data = {
-      message: 'Access denied',
+      message: 'Invalid token',
     };
     return APIResponse(res, data, httpStatus.FORBIDDEN);
   }
 };
 
 const authorizeAdmin = (req, res, next) => {
-  const bearerToken = req.headers['authorization'];
-  if (typeof bearerToken !== 'undefined') {
-    jwt.verify(bearerToken, secret, (err, data) => {
+  const auth = req.headers['authorization'];
+  const bearer = auth.split(' ');
+  const token = bearer[1];
+
+  if (typeof token !== 'undefined') {
+    jwt.verify(token, secret, (err, data) => {
       if (err) {
         const data = {
           message: 'Access denied',
@@ -51,7 +74,7 @@ const authorizeAdmin = (req, res, next) => {
     });
   } else {
     const data = {
-      message: 'Access denied',
+      message: 'Invalid token',
     };
     return APIResponse(res, data, httpStatus.FORBIDDEN);
   }
@@ -59,6 +82,7 @@ const authorizeAdmin = (req, res, next) => {
 
 module.exports = {
   issueToken,
+  getAuthenticatedUser,
   authenticateUser,
   authorizeAdmin,
 };
