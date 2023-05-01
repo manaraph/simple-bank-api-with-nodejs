@@ -5,6 +5,22 @@ const { hashPassword, comparePassword } = require('../services/bcrypt.service');
 const { issueToken } = require('../services/auth.service');
 const User = require('../models/user.model');
 
+const getUsers = async (_, res) => {
+  try {
+    const users = await User.find();
+    return APIResponse(
+      res,
+      {
+        message: 'success',
+        data: users,
+      },
+      httpStatus.OK
+    );
+  } catch (error) {
+    return APIFatalResponse(res, error);
+  }
+};
+
 const getUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -29,4 +45,4 @@ const getUser = async (req, res) => {
   }
 };
 
-module.exports = { getUser };
+module.exports = { getUsers, getUser };
