@@ -9,7 +9,7 @@ const initiatePayment = async (req, res) => {
   try {
     const { receiverId, amount } = req.body;
     const auth = req.headers.authorization;
-    const { user } = await getAuthenticatedUser(auth);
+    const { user } = getAuthenticatedUser(auth);
     // Wallet.updateOne(
     //   { userId: user._id },
     //   {
@@ -27,7 +27,7 @@ const initiatePayment = async (req, res) => {
     }
     const transactionDetails = { senderId: user._id, receiverId, amount };
     const transaction = new Transaction(transactionDetails);
-    const savedValue = await transaction.save();
+    await transaction.save();
 
     return APIResponse(
       res,

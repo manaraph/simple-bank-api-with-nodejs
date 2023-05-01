@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const httpStatus = require('http-status');
-const { APIResponse, APIFatalResponse } = require('../utils/response');
+const { APIResponse } = require('../utils/response');
 
 const secret = process.env.JWT_SECRET || 'secret';
 
@@ -28,22 +28,10 @@ const getAuthenticatedUser = (auth) => {
 
 const authenticateUser = (req, res, next) => {
   const auth = req.headers['authorization'];
-  const bearer = auth && auth.split(' ');
+  const data = getAuthenticatedUser(auth);
 
-  if (typeof bearer !== 'undefined' && bearer.length === 2) {
-    const token = bearer[1];
-
-    jwt.verify(token, secret, (err) => {
-      if (err) {
-        const data = {
-          message: 'Access denied',
-          err,
-        };
-        return APIResponse(res, data, httpStatus.FORBIDDEN);
-      } else {
-        next();
-      }
-    });
+  if (data?.user) {
+    next();
   } else {
     const data = {
       message: 'Invalid token',
@@ -54,28 +42,17 @@ const authenticateUser = (req, res, next) => {
 
 const authorizeAdmin = (req, res, next) => {
   const auth = req.headers['authorization'];
-  const bearer = auth && auth.split(' ');
+  const data = getAuthenticatedUser(auth);
 
-  if (typeof bearer !== 'undefined' && bearer.length === 2) {
-    const token = bearer[1];
-    jwt.verify(token, secret, (err, data) => {
-      if (err) {
-        const data = {
-          message: 'Access denied',
-          err,
-        };
-        return APIResponse(res, data, httpStatus.FORBIDDEN);
-      } else {
-        if (data.user.role === 'ADMIN') {
-          next();
-        } else {
-          const data = {
-            message: 'Access denied',
-          };
-          return APIResponse(res, data, httpStatus.FORBIDDEN);
-        }
-      }
-    });
+  if (data?.user) {
+    if (data.user.role === 'ADMIN') {
+      next();
+    } else {
+      const data = {
+        message: 'Access denied',
+      };
+      return APIResponse(res, data, httpStatus.FORBIDDEN);
+    }
   } else {
     const data = {
       message: 'Invalid token',
