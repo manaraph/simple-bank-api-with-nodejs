@@ -9,7 +9,7 @@ const WalletSchema = new mongoose.Schema(
     },
     availableBalance: {
       type: Number,
-      default: 50.0, // Initialize all user balance with 50 units
+      default: 500.0, // Initialize all user balance with 500 units
       required: true,
       trim: true,
     },

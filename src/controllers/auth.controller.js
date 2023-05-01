@@ -5,6 +5,7 @@ const { hashPassword, comparePassword } = require('../services/bcrypt.service');
 const { generateToken } = require('../services/auth.service');
 const redisService = require('../services/redis.service');
 const User = require('../models/user.model');
+const Wallet = require('../models/wallet.model');
 
 const refreshTime = process.env.JWT_REFRESH_TIME || 1800;
 
@@ -40,6 +41,10 @@ const register = async (req, res) => {
     const newUser = await user.save();
     const userDetails = newUser.toObject();
     delete userDetails.password;
+
+    // Credit user wallet for tests
+    const wallet = new Wallet({ userId: newUser._id });
+    await wallet.save();
 
     return APIResponse(
       res,
