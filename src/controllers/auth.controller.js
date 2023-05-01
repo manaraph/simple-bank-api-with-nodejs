@@ -65,6 +65,8 @@ const login = async (req, res) => {
       }
       if (comparePassword(password, user.password)) {
         const token = await issueToken({ user });
+        const userDetails = user.toObject();
+        delete userDetails.password;
 
         return APIResponse(
           res,
@@ -72,7 +74,7 @@ const login = async (req, res) => {
             message: 'login successful',
             data: {
               token,
-              user,
+              user: userDetails,
             },
           },
           httpStatus.OK
