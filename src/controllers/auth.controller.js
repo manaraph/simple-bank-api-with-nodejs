@@ -29,7 +29,7 @@ const register = async (req, res) => {
     const userData = {
       username,
       email,
-      role: role.toUpperCase(), // You can remove this so all new users are assigned the USER role
+      role: role && role.toUpperCase(), // You can remove this so all new users are assigned the USER role
       password: await hashPassword(password),
     };
 
@@ -67,15 +67,13 @@ const login = async (req, res) => {
         const token = await issueToken({ user });
         const userDetails = user.toObject();
         delete userDetails.password;
+        userDetails.token = token;
 
         return APIResponse(
           res,
           {
             message: 'login successful',
-            data: {
-              token,
-              user: userDetails,
-            },
+            data: userDetails,
           },
           httpStatus.OK
         );
