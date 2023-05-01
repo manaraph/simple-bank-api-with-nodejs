@@ -3,8 +3,15 @@ const httpStatus = require('http-status');
 const { APIResponse } = require('../utils/response');
 
 const secret = process.env.JWT_SECRET || 'secret';
+const accessTime = process.env.JWT_ACCESS_TIME || 300;
+const refreshTime = process.env.JWT_REFRESH_TIME || 1800;
 
-const issueToken = (payload) => jwt.sign(payload, secret);
+const generateToken = (payload) => {
+  const accessToken = jwt.sign(payload, secret, { expiresIn: parseInt(accessTime, 10) });
+  const refreshToken = jwt.sign(payload, secret, { expiresIn: parseInt(refreshTime, 10) });
+
+  return { accessToken, refreshToken };
+};
 
 const getAuthenticatedUser = (auth) => {
   let user;
@@ -62,7 +69,7 @@ const authorizeAdmin = (req, res, next) => {
 };
 
 module.exports = {
-  issueToken,
+  generateToken,
   getAuthenticatedUser,
   authenticateUser,
   authorizeAdmin,

@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-// const redis = require('redis');
 
 require('dotenv').config();
 const { authRoutes, adminRoutes, userRoutes, transactionRoutes } = require('./src/routes/v1');

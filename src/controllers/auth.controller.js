@@ -2,8 +2,11 @@ const httpStatus = require('http-status');
 const { APIResponse, APIFatalResponse } = require('../utils/response');
 const { validateEmail, generatePassword } = require('../utils/utils');
 const { hashPassword, comparePassword } = require('../services/bcrypt.service');
-const { issueToken } = require('../services/auth.service');
+const { generateToken } = require('../services/auth.service');
+const redisService = require('../services/redis.service');
 const User = require('../models/user.model');
+
+const refreshTime = process.env.JWT_REFRESH_TIME || 1800;
 
 const register = async (req, res) => {
   try {
@@ -64,10 +67,11 @@ const login = async (req, res) => {
         return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
       }
       if (comparePassword(password, user.password)) {
-        const token = await issueToken({ user });
+        const { accessToken, refreshToken } = await generateToken({ user });
         const userDetails = user.toObject();
         delete userDetails.password;
-        userDetails.token = token;
+        userDetails.accessToken = accessToken;
+        userDetails.refreshToken = refreshToken;
 
         return APIResponse(
           res,
@@ -94,4 +98,32 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const refreshAccessToken = async (req, res) => {
+  try {
+    const {
+      body: { refreshToken },
+      user,
+    } = req;
+    await redisService.set({
+      key: refreshToken,
+      value: '1',
+      timeType: 'EX',
+      time: parseInt(refreshTime, 10),
+    });
+
+    const token = await generateToken(user);
+
+    return APIResponse(
+      res,
+      {
+        message: 'success',
+        data: token,
+      },
+      httpStatus.OK
+    );
+  } catch (error) {
+    return APIFatalResponse(res, error);
+  }
+};
+
+module.exports = { register, login, refreshAccessToken };
