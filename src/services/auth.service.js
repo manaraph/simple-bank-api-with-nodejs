@@ -70,13 +70,13 @@ const authorizeAdmin = (req, res, next) => {
   }
 };
 
-const validateRefreshToken = (req, res, next) => {
+const validateRefreshToken = async (req, res, next) => {
   const { refreshToken } = req.body;
   const bearerToken = `Bearer ${refreshToken}`;
   const data = getAuthenticatedUser(bearerToken);
 
   if (data?.user) {
-    const tokenExists = redisService.get(refreshToken);
+    const tokenExists = await redisService.get(refreshToken);
     if (tokenExists) {
       const data = {
         message: 'Refresh token was already used',
