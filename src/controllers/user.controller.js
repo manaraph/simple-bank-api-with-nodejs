@@ -1,8 +1,5 @@
 const httpStatus = require('http-status');
 const { APIResponse, APIFatalResponse } = require('../utils/response');
-const { validateEmail, generatePassword } = require('../utils/utils');
-const { hashPassword, comparePassword } = require('../services/bcrypt.service');
-const { issueToken } = require('../services/auth.service');
 const User = require('../models/user.model');
 
 const getUsers = async (_, res) => {
