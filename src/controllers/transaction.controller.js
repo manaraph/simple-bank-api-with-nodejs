@@ -1,31 +1,34 @@
+const { startSession } = require('mongoose');
 const httpStatus = require('http-status');
 const { APIResponse, APIFatalResponse } = require('../utils/response');
 const Wallet = require('../models/wallet.model');
 const Transaction = require('../models/transaction.model');
-// const { startSession } = require('mongoose');
 
 const initiatePayment = async (req, res) => {
-  // const session = await startSession();
-
+  const session = await startSession();
+  session.startTransaction();
   try {
     const {
       body: { receiverId, amount },
       user,
     } = req;
     if (!user) {
-      const data = {
-        message: 'Failed: Invalid user',
-      };
-      return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
+      throw 'Failed: Invalid user';
+
+      // const data = {
+      //   message: 'Failed: Invalid user',
+      // };
+      // return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
     }
 
     const accountDetails = await Wallet.findOne({ userId: user._id });
 
     if (amount > accountDetails.availableBalance) {
-      const data = {
-        message: 'Failed: Insufficient fund',
-      };
-      return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
+      throw 'Failed: Insufficient fund';
+      // const data = {
+      //   message: 'Failed: Insufficient fund',
+      // };
+      // return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
     }
 
     senderDebited = await Wallet.findOneAndUpdate(
@@ -38,23 +41,23 @@ const initiatePayment = async (req, res) => {
     );
 
     if (!senderDebited) {
-      const transaction = new Transaction({ senderId: user._id, receiverId, amount, status: 'FAILED' });
-      await transaction.save();
+      throw 'Failed: Sender not debited';
 
-      const data = {
-        message: 'Failed: Sender not debited',
-      };
-      return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
+      // const data = {
+      //   message: 'Failed: Sender not debited',
+      // };
+      // return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
     }
 
     const transaction = new Transaction({ senderId: user._id, receiverId, amount });
     const transactionDetails = await transaction.save();
 
     if (!transactionDetails) {
-      const data = {
-        message: 'Failed: Transaction not recorded',
-      };
-      return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
+      // const data = {
+      //   message: 'Failed: Transaction not recorded',
+      // };
+      throw 'Failed: Transaction not recorded';
+      // return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
     }
 
     receiverCredited = await Wallet.findOneAndUpdate(
@@ -67,20 +70,25 @@ const initiatePayment = async (req, res) => {
     );
 
     if (!receiverCredited) {
-      const data = {
-        message: 'Failed: Receiver not credited',
-      };
-      return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
+      // const data = {
+      //   message: 'Failed: Receiver not credited',
+      // };
+
+      throw 'Failed: Receiver not credited';
+
+      // return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
     }
 
     const statusUpdated = await Transaction.findOneAndUpdate({ _id: transaction._id }, { status: 'SUCCESS' });
 
     if (!statusUpdated) {
-      const data = {
-        message: 'Failed: Transaction not updated',
-      };
-      return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
+      // const error = {
+      //   message: 'Failed: Transaction not updated',
+      // };
+      throw 'Failed: Transaction not updated';
+      // return APIResponse(res, data, httpStatus.UNPROCESSABLE_ENTITY);
     }
+    await session.commitTransaction();
 
     return APIResponse(
       res,
@@ -90,7 +98,16 @@ const initiatePayment = async (req, res) => {
       httpStatus.OK
     );
   } catch (error) {
-    return APIFatalResponse(res, error);
+    console.log(error);
+    await session.abortTransaction();
+    const transaction = new Transaction({ senderId: user._id, receiverId, amount, status: 'FAILED' });
+    await transaction.save();
+
+    next(APIFatalResponse(res, error));
+    // return APIFatalResponse(res, error);
+  } finally {
+    // Ending the session
+    session.endSession();
   }
 };
 
