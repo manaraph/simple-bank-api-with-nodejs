@@ -7,7 +7,7 @@ A simple bank API in Node.js with refresh token mechanism for re-authenticating 
 - Set up mongo DB
 - Copy .env.example to .env and set your environment variables
 - Set up and start your mongodb service
--
+- Set up and start your redis service
 
 ### Running the App
 
