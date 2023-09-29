@@ -2,8 +2,11 @@ const httpStatus = require('http-status');
 const { APIResponse, APIFatalResponse } = require('../utils/response');
 const Wallet = require('../models/wallet.model');
 const Transaction = require('../models/transaction.model');
+// const { startSession } = require('mongoose');
 
 const initiatePayment = async (req, res) => {
+  // const session = await startSession();
+
   try {
     const {
       body: { receiverId, amount },
